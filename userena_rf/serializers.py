@@ -27,7 +27,7 @@ class SignInSerializer(serializers.Serializer):
         max_length=User._meta.get_field('email').max_length
         )
     password = serializers.CharField(
-        widget=widgets.PasswordInput,
+        style=widgets.PasswordInput,
         )
 
     def validate(self, attrs):
@@ -70,13 +70,13 @@ class PasswordSetSerializer(serializers.Serializer):
 
     password1 = serializers.CharField(
         label=_("New password"),
-        widget=widgets.PasswordInput,
+        style=widgets.PasswordInput,
         min_length=PASSWORD_MIN_LENGTH,
         max_length=PASSWORD_MAX_LENGTH,
         )
     password2 = serializers.CharField(
         label=_("New password (again)"),
-        widget=widgets.PasswordInput,
+        style=widgets.PasswordInput,
         )
 
     def validate_password2(self, attrs, source):
@@ -90,11 +90,10 @@ class PasswordSetSerializer(serializers.Serializer):
                 )
         return attrs
 
-    def restore_object(self, attrs, instance=None):
-        assert instance is not None, 'Only update is allowed'
-        if instance is not None:
-            instance.set_password(attrs.get('password1'))
-            return instance
+    def update(self, instance, validated_data):
+        instance.set_password(attrs.get('password1'))
+        instance.save()
+        return instance
 
 
 class PasswordChangeSerializer(PasswordSetSerializer):
@@ -109,7 +108,7 @@ class PasswordChangeSerializer(PasswordSetSerializer):
 
     current_password = serializers.CharField(
         label=_("Current Password"),
-        widget=widgets.PasswordInput,
+        style=widgets.PasswordInput,
         )
 
     def validate_current_password(self, attrs, source):
@@ -140,19 +139,18 @@ class SignUpSerializer(serializers.Serializer):
     )
     password1 = serializers.CharField(
         label=_("Password"),
-        widget=widgets.PasswordInput(render_value=False),
+        style=widgets.PasswordInput(render_value=False),
         min_length=PASSWORD_MIN_LENGTH,
         max_length=PASSWORD_MAX_LENGTH,
         )
     password2 = serializers.CharField(
         label=_("Password Again"),
-        widget=widgets.PasswordInput(render_value=False),
+        style=widgets.PasswordInput(render_value=False),
         # min_length=PASSWORD_MIN_LENGTH,
         # max_length=PASSWORD_MAX_LENGTH,
         )
 
-    def validate_username(self, attrs, source):
-        username = attrs[source]
+    def validate_username(self, username):
         try:
             user = User.objects.get(username__iexact=username)
         except User.DoesNotExist:
@@ -174,11 +172,10 @@ class SignUpSerializer(serializers.Serializer):
             raise serializers.ValidationError(
                     _('This username is not allowed.')
                     )
-        return attrs
+        return username
 
-    def validate_email(self, attrs, source):
+    def validate_email(self, email):
         """ Validate that the e-mail address is unique. """
-        email = attrs[source]
 
         if User.objects.filter(email__iexact=email).exists():
             query = UserenaSignup.objects\
@@ -194,8 +191,7 @@ class SignUpSerializer(serializers.Serializer):
                 _('This email is already in use. '
                   'Please supply a different email.')
                 )
-
-        return attrs
+        return email
 
     def validate(self, attrs):
         """
@@ -219,21 +215,20 @@ class SignUpSerializer(serializers.Serializer):
             send_email=userena_settings.USERENA_ACTIVATION_REQUIRED,
             )
 
-    def restore_object(self, attrs, instance=None):
+    def create(self, validated_data):
         """
         Instantiate a new User instance.
         """
-        assert instance is None, 'Cannot update users with SignupSerializer'
-
         username, email, password = (
-            attrs['username'],
-            attrs['email'],
-            attrs['password1'],
+            validated_data['username'],
+            validated_data['email'],
+            validated_data['password1'],
             )
 
         user = self.create_user(username, email, password)
         self.instance = user
 
+        user.save()
         return user
 
 
@@ -246,14 +241,14 @@ class SignUpOnlyEmailSerializer(SignUpSerializer):
             if not User.objects.get(username__iexact=username).exists():
                 return username
 
-    def restore_object(self, attrs, instance=None):
-        attrs['username'] = self.construct_username()
-        return super(SignUpOnlyEmailSerializer, self).restore_object(attrs, instance)
+    def create(self, validated_data):
+        validated_data['username'] = self.construct_username()
+        return super(SignUpOnlyEmailSerializer, self).create(validated_data)
 
 
 class SignUpTosSerializerMixin(object):
     tos = serializers.BooleanField(
-        widget=widgets.CheckboxInput(),
+        style=widgets.CheckboxInput(),
         label=_('I have read and agree to the Terms of Service'),
         error_messages={'required': _('You must agree to the terms to register.')}
         )
@@ -297,18 +292,18 @@ class EmailChangeSerializer(serializers.Serializer):
 
         return attrs
 
-    def restore_object(self, attrs, instance):
+    def update(self, instance, validated_data):
         """
         Save method calls :func:`user.change_email()` method which sends out an
         email with an verification key to verify and with it enable this new
         email address.
         """
-        assert instance is not None, 'Only update is allowed'
         user = instance
-        email = attrs['email']
-        if instance is not None:
-            user.userena_signup.change_email(email)
-            return instance
+        email = validated_data['email']
+        user.userena_signup.change_email(email)
+        instance.save()
+        return instance
+
 
 
 class UserSerializer(serializers.ModelSerializer):

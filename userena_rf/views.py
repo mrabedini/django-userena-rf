@@ -17,6 +17,7 @@ from django.utils.encoding import force_bytes
 from rest_framework import generics
 from rest_framework.views import APIView
 from rest_framework.authentication import TokenAuthentication, SessionAuthentication
+from rest_framework.authtoken.models import Token
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.status import HTTP_400_BAD_REQUEST
@@ -93,7 +94,7 @@ class SignUpView(SecureRequiredMixin, generics.GenericAPIView):
         serializer = serializer_class(data=request.DATA)
 
         if serializer.is_valid():
-            new_user = serializer.instance
+            new_user = serializer.create(serializer.validated_data)
 
             self.send_signup_signal(new_user)
             signed_in = self.signout_signin(request, new_user)
@@ -130,9 +131,12 @@ class SignInView(SecureRequiredMixin, generics.GenericAPIView):
             # send a signal that a user has signed in
             userena_signals.account_signin.send(sender=None, user=user)
 
+            token, created = Token.objects.get_or_create(user=user)
+
             return Response({
                 API_MESSAGE_KEY: _('Signed in successfully.'),
-                'user': get_user_serializer_class()(user).data
+                'user': get_user_serializer_class()(user).data,
+                'token': token.key
                 })
 
         return Response(serializer.errors, status=HTTP_400_BAD_REQUEST)

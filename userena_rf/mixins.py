@@ -1,6 +1,6 @@
 from django.http import HttpResponsePermanentRedirect
 
-from userena import settings as userena_settings
+from django.conf import settings as userena_settings
 
 
 class SecureRequiredMixin(object):
