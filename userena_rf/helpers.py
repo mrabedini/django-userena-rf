@@ -1,4 +1,4 @@
-from django.utils.importlib import import_module
+from importlib import import_module
 
 from .settings import USER_SERIALIZER_CLASS
 

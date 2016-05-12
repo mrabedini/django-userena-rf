@@ -8,7 +8,7 @@ from django.contrib.auth import authenticate
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.utils.decorators import method_decorator
 from django.core.mail import send_mail
-from django.contrib.sites.models import get_current_site
+from django.contrib.sites.models import SiteManager
 from django.contrib.auth.tokens import default_token_generator
 from django.template import loader
 from django.utils.http import urlsafe_base64_encode
@@ -91,7 +91,7 @@ class SignUpView(SecureRequiredMixin, generics.GenericAPIView):
 
     def post(self, request, format=None):
         serializer_class = self.get_serializer_class()
-        serializer = serializer_class(data=request.DATA)
+        serializer = serializer_class(data=request.data)
 
         if serializer.is_valid():
             new_user = serializer.create(serializer.validated_data)
@@ -120,7 +120,7 @@ class SignInView(SecureRequiredMixin, generics.GenericAPIView):
 
     def post(self, request, format=None):
         serializer_class = self.get_serializer_class()
-        serializer = serializer_class(data=request.DATA)
+        serializer = serializer_class(data=request.data)
 
         if serializer.is_valid():
             user = serializer.instance
@@ -149,7 +149,7 @@ class SignInRememberMeView(SignInView):
     serializer_class = SignInRememberMeSerializer
 
     def set_session_expiry(self, request):
-        if request.DATA.get('remember_me'):
+        if request.data.get('remember_me'):
             request.session.set_expiry(
                 userena_settings.USERENA_REMEMBER_ME_DAYS[1] * 86400
                 )
@@ -187,7 +187,7 @@ class PasswordResetView(SecureRequiredMixin, generics.GenericAPIView):
 
     def post(self, request, format=None):
         serializer_class = self.get_serializer_class()
-        serializer = serializer_class(data=request.DATA)
+        serializer = serializer_class(data=request.data)
 
         domain_override = None  # used by admin?
         token_generator = self.token_generator
@@ -203,7 +203,7 @@ class PasswordResetView(SecureRequiredMixin, generics.GenericAPIView):
                 if not user.has_usable_password():
                     continue
                 if not domain_override:
-                    current_site = get_current_site(request)
+                    current_site = SiteManager.get_current(request)
                     site_name = current_site.name
                     domain = current_site.domain
                 else:
@@ -256,7 +256,7 @@ class PasswordSetView(SecureRequiredMixin, generics.GenericAPIView):
     def post(self, request, format=None):
         user = request.user
         serializer_class = self.get_serializer_class()
-        serializer = serializer_class(data=request.DATA, instance=user)
+        serializer = serializer_class(data=request.data, instance=user)
 
         if serializer.is_valid():
             serializer.save()  # saves user
@@ -282,7 +282,7 @@ class EmailChangeView(SecureRequiredMixin, generics.GenericAPIView):
     def post(self, request, format=None):
         user = request.user
         serializer_class = self.get_serializer_class()
-        serializer = serializer_class(data=request.DATA, instance=user)
+        serializer = serializer_class(data=request.data, instance=user)
 
         if serializer.is_valid():
             # serializer.save()  # saves user
