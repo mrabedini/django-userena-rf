@@ -8,7 +8,8 @@ from django.contrib.auth import authenticate
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.utils.decorators import method_decorator
 from django.core.mail import send_mail
-from django.contrib.sites.models import SiteManager
+from django.conf import settings
+from django.contrib.sites.models import Site
 from django.contrib.auth.tokens import default_token_generator
 from django.template import loader
 from django.utils.http import urlsafe_base64_encode
@@ -203,7 +204,7 @@ class PasswordResetView(SecureRequiredMixin, generics.GenericAPIView):
                 if not user.has_usable_password():
                     continue
                 if not domain_override:
-                    current_site = SiteManager.get_current(request)
+                    current_site = Site.objects.get(pk=settings.SITE_ID)
                     site_name = current_site.name
                     domain = current_site.domain
                 else:
