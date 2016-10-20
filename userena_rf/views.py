@@ -107,6 +107,7 @@ class SignUpView(SecureRequiredMixin, generics.GenericAPIView):
                 'username': new_user.username,
                 'signed_in': signed_in,
                 'userid': new_user.id,
+                #'user': get_user_serializer_class()(user).data,
                 'token': token.key
                 })
 
@@ -141,6 +142,7 @@ class SignInView(SecureRequiredMixin, generics.GenericAPIView):
             return Response({
                 API_MESSAGE_KEY: _('Signed in successfully.'),
                 'userid': user.id, #get_user_serializer_class()(user).data,
+                #'user': get_user_serializer_class()(user).data,
                 'token': token.key
                 })
 
@@ -303,7 +305,7 @@ class EmailChangeView(SecureRequiredMixin, generics.GenericAPIView):
 class CurrentUserView(APIView):
     allowed_methods = ['get']
 
-    @method_decorator(ensure_csrf_cookie)
+    #@method_decorator(ensure_csrf_cookie)
     def dispatch(self, *args, **kwargs):
         return super(CurrentUserView, self).dispatch(*args, **kwargs)
 
