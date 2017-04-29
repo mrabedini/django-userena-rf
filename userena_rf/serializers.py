@@ -243,8 +243,8 @@ class SignUpOnlyEmailSerializer(SignUpSerializer):
     def construct_username(self):
         """ Generate a random username"""
         while True:
-            username = sha_constructor(str(random.random())).hexdigest()[:5]
-            if not User.objects.get(username__iexact=username).exists():
+            username = sha_constructor(str(random.random()).encode('utf-8')).hexdigest()[:5]
+            if not User.objects.filter(username__iexact=username).exists():
                 return username
 
     def create(self, validated_data):
