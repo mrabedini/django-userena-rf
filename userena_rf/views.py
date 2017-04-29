@@ -99,17 +99,18 @@ class SignUpView(SecureRequiredMixin, generics.GenericAPIView):
 
             self.send_signup_signal(new_user)
             signed_in = self.signout_signin(request, new_user)
+            responseDict = dict()
             if signed_in:
                 token, created = Token.objects.get_or_create(user=new_user)
+                responseDict.update({'token',token.key})
 
-            return Response({
-                API_MESSAGE_KEY: _('Signed up successfully.'),
+            responseDict.update({API_MESSAGE_KEY: _('Signed up successfully.'),
                 'username': new_user.username,
                 'signed_in': signed_in,
                 'userid': new_user.id,
                 #'user': get_user_serializer_class()(user).data,
-                'token': token.key
                 })
+            return Response(responseDict)
 
         return Response(serializer.errors, status=HTTP_400_BAD_REQUEST)
 
@@ -315,4 +316,3 @@ class CurrentUserView(APIView):
         if user.is_authenticated():
             ret = get_user_serializer_class()(user).data
         return Response(ret)
-
