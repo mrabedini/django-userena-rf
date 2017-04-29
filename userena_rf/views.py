@@ -107,7 +107,7 @@ class SignUpView(SecureRequiredMixin, generics.GenericAPIView):
             responseDict.update({API_MESSAGE_KEY: _('Signed up successfully.'),
                 'username': new_user.username,
                 'signed_in': signed_in,
-                'userid': new_user.id,
+                #'userid': new_user.id,
                 #'user': get_user_serializer_class()(user).data,
                 })
             return Response(responseDict)
@@ -142,7 +142,7 @@ class SignInView(SecureRequiredMixin, generics.GenericAPIView):
 
             return Response({
                 API_MESSAGE_KEY: _('Signed in successfully.'),
-                'userid': user.id, #get_user_serializer_class()(user).data,
+                #'userid': user.id, #get_user_serializer_class()(user).data,
                 #'user': get_user_serializer_class()(user).data,
                 'token': token.key
                 })
