@@ -1,6 +1,6 @@
 from django.http import HttpResponsePermanentRedirect
 
-from django.conf import settings as userena_settings
+from userena import settings as userena_settings
 
 
 class SecureRequiredMixin(object):
@@ -17,7 +17,7 @@ class SecureRequiredMixin(object):
     """
     def dispatch(self, request, *args, **kwargs):
         if not request.is_secure():
-            if userena_settings.USERENA_USE_HTTPS:
+            if userena_settings._USERENA_USE_HTTPS:
                 request_url = request.build_absolute_uri(request.get_full_path())
                 secure_url = request_url.replace('http://', 'https://')
                 return HttpResponsePermanentRedirect(secure_url)
