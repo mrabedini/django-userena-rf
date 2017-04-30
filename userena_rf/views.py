@@ -183,7 +183,8 @@ class SignOutView(SecureRequiredMixin, APIView):
 class PasswordResetView(SecureRequiredMixin, generics.GenericAPIView):
     allowed_methods = ['post']
 
-    authentication_classes = (TokenAuthentication, SessionAuthentication)
+    authentication_classes = ()
+    permission_classes = ()
     serializer_class = PasswordResetSerializer
 
     token_generator = default_token_generator
@@ -240,7 +241,7 @@ class PasswordResetView(SecureRequiredMixin, generics.GenericAPIView):
 
                 send_mail(
                     subject, email, self.from_email,
-                    [user.email], #html_message=html_email,
+                    [user.email], html_message=html_email,
                     )
 
             return Response({
