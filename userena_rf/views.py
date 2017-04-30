@@ -172,6 +172,7 @@ class SignOutView(SecureRequiredMixin, APIView):
     permission_classes = (IsAuthenticated, )
 
     def post(self, request, format=None):
+        request.user.auth_token.delete()
         auth_logout(request)
         userena_signals.account_signout.send(sender=None, user=request.user)
         return Response({
