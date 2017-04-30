@@ -166,12 +166,12 @@ class SignInRememberMeView(SignInView):
 
 
 class SignOutView(SecureRequiredMixin, APIView):
-    allowed_methods = ['post']
+    allowed_methods = ['get']
 
     authentication_classes = (TokenAuthentication, SessionAuthentication)
     permission_classes = (IsAuthenticated, )
 
-    def post(self, request, format=None):
+    def get(self, request, format=None):
         request.user.auth_token.delete()
         auth_logout(request)
         userena_signals.account_signout.send(sender=None, user=request.user)
@@ -256,6 +256,12 @@ class PasswordResetView(SecureRequiredMixin, generics.GenericAPIView):
 
         return Response(serializer.errors, status=HTTP_400_BAD_REQUEST)
 
+class PasswordResetConfirmView(SecureRequiredMixin, generics.GenericAPIView):
+    allowed_methods = ['post']
+
+    authentication_classes = ()
+    permission_classes = ()
+    serializer_class = PasswordResetSerializer
 
 class PasswordSetView(SecureRequiredMixin, generics.GenericAPIView):
     allowed_methods = ['post']  # or should this be a PUT?
